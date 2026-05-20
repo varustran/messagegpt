@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced AI Studio Pro VN</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght=400;500&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+            },
+            startup: {
+                typeset: false
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-main: #0b0b0c;
+            --bg-sidebar: #111113;
+            --bg-surface: #16161a;
+            --bg-surface-hover: #212127;
+            --border-color: #222327;
+            --text-main: #e3e3e3;
+            --text-muted: #9aa0a6;
+            --accent-color: #8a65ff;
+            --accent-gradient: linear-gradient(135deg, #6149ed, #8a65ff);
+        }
+
+        [data-theme="light"] {
+            --bg-main: #f9f9fb;
+            --bg-sidebar: #f0f1f4;
+            --bg-surface: #ffffff;
+            --bg-surface-hover: #eef0f3;
+            --border-color: #dcdfe6;
+            --text-main: #2c3e50;
+            --text-muted: #7f8c8d;
+            --accent-color: #6149ed;
+            --accent-gradient: linear-gradient(135deg, #6149ed, #7d66ff);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; transition: background-color 0.2s, border-color 0.2s; }
+        body { background-color: var(--bg-main); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+        .studio-container { display: flex; width: 100vw; height: 100vh; }
+
+        /* Sidebar trái */
+        .sidebar { width: 290px; background-color: var(--bg-sidebar); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; flex-shrink: 0; z-index: 10; }
+        .sidebar-header { padding: 24px 16px 16px 16px; }
+        .btn-new-chat { width: 100%; background: var(--accent-gradient); color: #fff; border: none; padding: 12px 16px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 12px rgba(97, 73, 237, 0.2); }
+        .btn-new-chat:hover { transform: translateY(-1px); filter: brightness(1.1); }
+        
+        .session-list { flex: 1; overflow-y: auto; padding: 8px 12px; display: flex; flex-direction: column; gap: 4px; }
+        .session-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-radius: 10px; cursor: pointer; color: var(--text-muted); font-size: 14px; }
+        .session-item:hover { background-color: var(--bg-surface-hover); color: var(--text-main); }
+        .session-item.active { background-color: var(--bg-surface); color: var(--text-main); font-weight: 500; border-left: 3px solid var(--accent-color); }
+        .session-title-wrapper { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+        .session-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .session-actions { display: flex; gap: 4px; opacity: 0; margin-left: 8px; }
+        .session-item:hover .session-actions { opacity: 1; }
+        .action-icon { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 4px; font-size: 13px; }
+        .action-icon:hover { color: var(--text-main); background-color: var(--border-color); }
+
+        /* Vùng Tài Khoản & Nâng Cấp */
+        .sidebar-account-panel { background-color: var(--bg-surface); border-top: 1px solid var(--border-color); padding: 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; position: relative; }
+        .sidebar-account-panel:hover { background-color: var(--bg-surface-hover); }
+        .account-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--accent-gradient); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 15px; }
+        .account-details { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+        .account-name { font-size: 13.5px; font-weight: 600; color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .account-role-box { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+        .account-badge { font-size: 10px; font-weight: 700; color: #8a65ff; background-color: rgba(138, 101, 255, 0.15); padding: 1px 6px; border-radius: 5px; text-transform: uppercase; }
+        
+        .btn-upgrade-pill { background: linear-gradient(90deg, #ff4e50, #f9d423); color: #fff; border: none; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 20px; cursor: pointer; animation: pulseGlow 2s infinite; }
+
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 0 0 rgba(255, 78, 80, 0.4); }
+            70% { box-shadow: 0 0 0 8px rgba(255, 78, 80, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 78, 80, 0); }
+        }
+
+        /* Khung chính Chat */
+        .main-chat-area { flex: 1; display: flex; flex-direction: column; height: 100%; background-color: var(--bg-main); position: relative; }
+
+        /* Header */
+        .header-container { display: flex; justify-content: space-between; align-items: center; padding: 18px 32px; border-bottom: 1px solid var(--border-color); background-color: var(--bg-surface); }
+        .header { font-size: 20px; font-weight: 600; color: var(--text-main); display: flex; align-items: center; gap: 12px; letter-spacing: -0.5px; }
+        .header span { 
+            background: linear-gradient(74deg, #4285f4 0%, #a87ffb 35%, #ea4335 70%, #4285f4 100%); 
+            background-size: 200% auto;
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            font-weight: 800; 
+            animation: shineText 4s linear infinite;
+        }
+        @keyframes shineText { to { background-position: 200% center; } }
+
+        .model-select { background-color: var(--bg-main); color: var(--text-main); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 20px; font-size: 13.5px; outline: none; cursor: pointer; font-weight: 500; }
+        .model-select:hover { border-color: var(--accent-color); }
+
+        /* Lịch sử trò chuyện */
+        .chat-history { flex: 1; overflow-y: auto; padding: 32px 0; display: flex; flex-direction: column; align-items: center; }
+        .history-scroll-content { width: 100%; max-width: 850px; padding: 0 24px; }
+        
+        .message-row { display: flex; gap: 24px; margin-bottom: 35px; animation: fadeIn 0.3s ease; }
+        .message-row.user { justify-content: flex-end; }
+
+        .avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .user .avatar { background: #1a73e8; color: #fff; order: 2; }
+        .assistant .avatar { background: var(--accent-gradient); color: #fff; }
+
+        .bubble { max-width: 85%; font-size: 15px; line-height: 1.65; word-wrap: break-word; color: var(--text-main); }
+        .user .bubble { background-color: var(--bg-surface); padding: 14px 22px; border-radius: 22px; border-bottom-right-radius: 4px; border: 1px solid var(--border-color); }
+        .assistant .bubble { flex: 1; padding-top: 4px; }
+
+        /* Xử lý định dạng Markdown tự động tinh chỉnh */
+        .bubble h3 { font-size: 18px; font-weight: 600; margin: 16px 0 8px 0; color: var(--text-main); }
+        .bubble p { margin-bottom: 10px; }
+        .bubble p:last-child { margin-bottom: 0; }
+        .bubble strong { color: #ffffff; font-weight: 700; }
+        [data-theme="light"] .bubble strong { color: #000000; }
+        .bubble ul, .bubble ol { margin: 10px 0 10px 20px; }
+        .bubble li { margin-bottom: 4px; }
+        .bubble blockquote { border-left: 4px solid var(--accent-color); background-color: var(--bg-surface); padding: 10px 16px; margin: 14px 0; border-radius: 4px; color: var(--text-muted); font-style: italic; }
+
+        /* Code block */
+        .code-block-container { margin: 20px 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); background-color: #070708; }
+        .code-header { background-color: #121215; padding: 10px 16px; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #8e918f; border-bottom: 1px solid var(--border-color); }
+        .copy-btn { background: none; border: none; color: #8e918f; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .copy-btn:hover { color: #fff; }
+        pre { padding: 16px; overflow-x: auto; margin: 0; background-color: #070708; }
+        code { font-family: 'JetBrains Mono', monospace; font-size: 13.5px; color: #e8eaed; }
+
+        /* Attachment UI */
+        .attached-image-preview { max-width: 240px; max-height: 240px; border-radius: 12px; margin-top: 10px; display: block; border: 1px solid var(--border-color); cursor: pointer; }
+        .file-attachment-tag { display: inline-flex; align-items: center; gap: 8px; background-color: var(--bg-surface); padding: 6px 12px; border-radius: 8px; color: var(--accent-color); font-size: 13px; margin-top: 8px; font-weight: 500; border: 1px solid var(--border-color); cursor: pointer; }
+
+        /* Footer nhập liệu */
+        .footer-container { width: 100%; display: flex; flex-direction: column; align-items: center; padding: 0 24px 24px 24px; background-color: var(--bg-main); }
+        .footer-scroll-content { width: 100%; max-width: 850px; }
+
+        /* Hộp lưu ý linh động */
+        .dashboard-notes-wrapper { background-color: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 16px; padding: 14px 18px; margin-bottom: 14px; }
+        .notes-header { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--accent-color); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border-color); padding-bottom: 6px; margin-bottom: 8px; }
+        .notes-list { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+        .notes-item { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; display: flex; align-items: flex-start; gap: 6px; }
+        .notes-item i { color: var(--accent-color); margin-top: 4px; font-size: 10px; }
+
+        /* Hàng đợi file */
+        .upload-queue-bar { display: none; align-items: center; gap: 12px; background-color: var(--bg-surface); border: 1px solid var(--border-color); padding: 10px 16px; border-radius: 14px 14px 0 0; border-bottom: none; width: 100%; }
+        .queue-item { display: flex; align-items: center; gap: 8px; font-size: 13px; background-color: var(--bg-main); padding: 4px 10px; border-radius: 6px; }
+        .remove-queue-btn { background: none; border: none; color: #ea4335; cursor: pointer; margin-left: 4px; }
+
+        /* Ô nhập liệu */
+        .input-bar-wrapper { display: flex; align-items: flex-end; background-color: var(--bg-surface); border-radius: 24px; padding: 14px 20px; min-height: 56px; border: 1px solid var(--border-color); }
+        .input-bar-wrapper:focus-within { border-color: var(--accent-color); }
+        textarea { flex: 1; background: none; border: none; color: var(--text-main); resize: none; height: 24px; max-height: 240px; outline: none; font-size: 15.5px; line-height: 24px; overflow-y: hidden; }
+        textarea::placeholder { color: var(--text-muted); }
+
+        .action-trigger-btn { background: none; border: none; color: var(--text-muted); width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+        .action-trigger-btn:hover { color: var(--text-main); }
+        .icon-btn { background: none; border: none; color: var(--text-muted); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; cursor: not-allowed; opacity: 0.4; }
+        .send-btn-active { color: var(--accent-color) !important; cursor: pointer !important; opacity: 1 !important; }
+
+        /* Modals Glassmorphism */
+        .modal-overlay { display: none; position: fixed; top:0; left:0; width:100vw; height:100vh; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px); z-index: 100; align-items: center; justify-content: center; }
+        .modal-card { background: var(--bg-surface); border: 1px solid var(--border-color); width: 90%; max-width: 500px; border-radius: 20px; padding: 24px; position: relative; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        .modal-card.wide { max-width: 900px; }
+        .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 18px; }
+        .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+        /* Pricing Grid */
+        .pricing-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 12px; }
+        .price-card { background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+        .price-card.premium-tier { border-color: var(--accent-color); background: linear-gradient(180deg, var(--bg-surface), var(--bg-main)); }
+        .tier-name { font-size: 14px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); }
+        .tier-price { font-size: 18px; font-weight: 700; color: var(--text-main); margin: 8px 0; }
+        .tier-features { list-style: none; font-size: 11.5px; color: var(--text-muted); display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+        .tier-features li { display: flex; align-items: flex-start; gap: 4px; }
+        .tier-features li i { color: #2ecc71; margin-top: 2px; }
+        .tier-features li i.fa-xmark { color: #e74c3c; }
+        .btn-tier-action { width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-surface); color: var(--text-main); font-size: 12px; font-weight: 600; cursor: pointer; }
+        .price-card.premium-tier .btn-tier-action { background: var(--accent-gradient); border: none; color: #fff; }
+
+        /* Form elements */
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px; font-weight: 500; }
+        .form-input { width: 100%; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px 14px; color: var(--text-main); outline: none; }
+        .form-input:focus { border-color: var(--accent-color); }
+        .btn-save { background: var(--accent-gradient); color:#fff; border:none; padding:10px 20px; border-radius:10px; font-weight:600; cursor:pointer; float:right; }
+
+        .welcome-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; height: 100%; padding: 40px 20px; color: var(--text-muted); }
+        .welcome-screen i { font-size: 44px; background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 16px; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+    </style>
+</head>
+<body>
+
+    <div class="studio-container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <button class="btn-new-chat" id="btnNewChat">
+                    <i class="fa-solid fa-plus"></i> Phiên hội thoại mới
+                </button>
+            </div>
+            <div class="session-list" id="sessionListZone"></div>
+
+            <div class="sidebar-account-panel" id="accountPanelBtn" title="Bấm để mở cài đặt & quản lý hồ sơ">
+                <div class="account-avatar">
+                    <i class="fa-solid fa-user-gear"></i>
+                </div>
+                <div class="account-details">
+                    <div class="account-name" id="displayUsernameText">TKV</div>
+                    <div class="account-role-box">
+                        <span class="account-badge">Premium</span>
+                        <button class="btn-upgrade-pill" id="upgradePillBtn">PRO</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-chat-area">
+            <div class="header-container">
+                <div class="header">Advanced <span>AI Studio Pro VN</span></div>
+                <select class="model-select" id="modelSelector">
+                    <option value="Gemini 2.5 Flash">Gemini 2.5 Flash</option>
+                    <option value="Gemini 3.5 Flash">Gemini 3.5 Flash</option>
+                    <option value="Gemini 3.1 Pro">Gemini 3.1 Pro</option>
+                    <option value="Gemini Pro">Gemini Pro</option>
+                    <option value="GPT Pro Codex">GPT Pro Codex</option>
+                    <option value="Claude 3.5 Sonnet">Claude 3.5 Sonnet</option>
+                    <option value="Claude 3 Opus">Claude 3 Opus</option>
+                    <option value="Claude 3.7 Sonnet (Thinking)">Claude 3.7 Sonnet (Thinking)</option>
+                </select>
+            </div>
+
+            <div class="chat-history" id="chatHistory">
+                <div class="history-scroll-content" id="chatHistoryContent"></div>
+            </div>
+
+            <div class="footer-container">
+                <div class="footer-scroll-content">
+                    
+                    <div class="dashboard-notes-wrapper" id="dashboardNotesBox">
+                        <div class="notes-header">
+                            <i class="fa-solid fa-clipboard-list"></i> Bảng lưu ý công việc & Mục tiêu cốt lõi
+                        </div>
+                        <ul class="notes-list">
+                            <li class="notes-item"><i class="fa-solid fa-circle-dot"></i> <span><strong>Video Algorithm App:</strong> Xây dựng bộ nhận diện FPS động cho từng luồng video trên nền Tkinter/Qt.</span></li>
+                            <li class="notes-item"><i class="fa-solid fa-circle-dot"></i> <span><strong>FPT School Dashboard:</strong> Nâng cấp biểu đồ trích xuất dữ liệu, tối ưu và đóng gói tệp.</span></li>
+                            <li class="notes-item"><i class="fa-solid fa-circle-dot"></i> <span><strong>Physics Olympiad Math:</strong> Biên dịch chính xác cấu trúc toán và LaTeX nâng cao bằng <code>align*</code>.</span></li>
+                        </ul>
+                    </div>
+
+                    <div class="input-outer-container">
+                        <div class="upload-queue-bar" id="uploadQueueBar"></div>
+                        
+                        <div class="input-bar-wrapper">
+                            <button class="action-trigger-btn" id="paperclipBtn" title="Đính kèm tệp nguồn">
+                                <i class="fa-solid fa-paperclip"></i>
+                            </button>
+                            <input type="file" id="hiddenFileInput" style="display: none;" accept="image/*,.txt,.js,.py,.html,.css,.json,.cpp,.c,.java,.cs">
+                            
+                            <textarea id="userInput" placeholder="Nhập câu hỏi, công thức toán lý hoặc dán mã nguồn vào đây..." rows="1"></textarea>
+                            <button class="icon-btn" id="sendBtn">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal-card">
+            <button class="modal-close" id="closeSettingsBtn">&times;</button>
+            <div class="modal-title"><i class="fa-solid fa-sliders" style="color:var(--accent-color)"></i> Cấu hình hệ thống & Hồ sơ</div>
+            
+            <div class="form-group">
+                <label class="form-label">Tên tài khoản người dùng</label>
+                <input type="text" class="form-input" id="inputUsernameField" value="TKV">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Chế độ hiển thị giao diện (Theme)</label>
+                <select class="form-input" id="themeSelectField">
+                    <option value="dark">Studio Dark Mode</option>
+                    <option value="light">Studio Light Mode</option>
+                </select>
+            </div>
+
+            <button class="btn-save" id="btnSaveSettings">Cập nhật cấu hình</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="pricingModal">
+        <div class="modal-card wide">
+            <button class="modal-close" id="closePricingBtn">&times;</button>
+            <div class="modal-title"><i class="fa-solid fa-gem" style="color:#f9d423"></i> Đăng ký phân cấp tài khoản - Enterprise Cloud</div>
+            
+            <div class="pricing-grid">
+                <div class="price-card">
+                    <div>
+                        <div class="tier-name">Free Tier</div>
+                        <div class="tier-price">0 đ <span style="font-size:10px;font-weight:400;color:var(--text-muted)">/ vĩnh viễn</span></div>
+                        <ul class="tier-features">
+                            <li><i class="fa-solid fa-check"></i> Model Gemini 2.5 Flash</li>
+                            <li><i class="fa-solid fa-xmark"></i> Các model Pro & Codex</li>
+                            <li><i class="fa-solid fa-xmark"></i> Gửi tệp đính kèm</li>
+                            <li><i class="fa-solid fa-triangle-exclamation"></i> Giới hạn tin nhắn nghiêm ngặt</li>
+                        </ul>
+                    </div>
+                    <button class="btn-tier-action">Đang sử dụng thử</button>
+                </div>
+                <div class="price-card">
+                    <div>
+                        <div class="tier-name">Starter Pack</div>
+                        <div class="tier-price">299.000 đ <span style="font-size:10px;font-weight:400;color:var(--text-muted)">/ tháng</span></div>
+                        <ul class="tier-features">
+                            <li><i class="fa-solid fa-check"></i> Mở khóa GPT & Gemini cơ bản</li>
+                            <li><i class="fa-solid fa-check"></i> Tốc độ kết nối tiêu chuẩn</li>
+                            <li><i class="fa-solid fa-xmark"></i> Hỗ trợ gửi tệp nguồn</li>
+                            <li><i class="fa-solid fa-triangle-exclamation"></i> Giới hạn tin nhắn trung bình</li>
+                        </ul>
+                    </div>
+                    <button class="btn-tier-action" onclick="alert('Đã gửi yêu cầu đăng ký gói Starter!')">Nâng cấp ngay</button>
+                </div>
+                <div class="price-card">
+                    <div>
+                        <div class="tier-name">Ultra Core</div>
+                        <div class="tier-price">599.000 đ <span style="font-size:10px;font-weight:400;color:var(--text-muted)">/ tháng</span></div>
+                        <ul class="tier-features">
+                            <li><i class="fa-solid fa-check"></i> Toàn bộ Model hiện có</li>
+                            <li><i class="fa-solid fa-check"></i> Cho phép gửi file ảnh/code</li>
+                            <li><i class="fa-solid fa-triangle-exclamation"></i> Giới hạn dung lượng tệp</li>
+                            <li><i class="fa-solid fa-triangle-exclamation"></i> Giới hạn tin nhắn Ultra</li>
+                        </ul>
+                    </div>
+                    <button class="btn-tier-action" onclick="alert('Đã gửi yêu cầu đăng ký gói Ultra!')">Nâng cấp ngay</button>
+                </div>
+                <div class="price-card premium-tier">
+                    <div>
+                        <div class="tier-name" style="color:#8a65ff">Premium Elite</div>
+                        <div class="tier-price">1.999.000 đ <span style="font-size:10px;font-weight:400;color:#8a65ff">/ tháng</span></div>
+                        <ul class="tier-features">
+                            <li><i class="fa-solid fa-check"></i> Toàn bộ Model tối tân nhất</li>
+                            <li><i class="fa-solid fa-check"></i> Hỗ trợ gửi tệp tối đa tần suất</li>
+                            <li><i class="fa-solid fa-check"></i> Giới hạn tin nhắn mở rộng vượt trội</li>
+                            <li><i class="fa-solid fa-check"></i> Ưu tiên luồng kết nối API VIP</li>
+                        </ul>
+                    </div>
+                    <button class="btn-tier-action">Kích hoạt kích hoạt (VIP)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const sessionListZone = document.getElementById('sessionListZone');
+        const chatHistory = document.getElementById('chatHistory');
+        const chatHistoryContent = document.getElementById('chatHistoryContent');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const modelSelector = document.getElementById('modelSelector');
+        const btnNewChat = document.getElementById('btnNewChat');
+        const paperclipBtn = document.getElementById('paperclipBtn');
+        const hiddenFileInput = document.getElementById('hiddenFileInput');
+        const uploadQueueBar = document.getElementById('uploadQueueBar');
+
+        // Phân vùng điều phối Modals & Settings
+        const accountPanelBtn = document.getElementById('accountPanelBtn');
+        const upgradePillBtn = document.getElementById('upgradePillBtn');
+        const settingsModal = document.getElementById('settingsModal');
+        const pricingModal = document.getElementById('pricingModal');
+        const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+        const closePricingBtn = document.getElementById('closePricingBtn');
+        const btnSaveSettings = document.getElementById('btnSaveSettings');
+        const inputUsernameField = document.getElementById('inputUsernameField');
+        const displayUsernameText = document.getElementById('displayUsernameText');
+        const themeSelectField = document.getElementById('themeSelectField');
+
+        const GEMINI_35_GATEWAY_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent";
+        const GEMINI_GATEWAY_KEY = "AIzaSyBEVo39q_ZAETlEuWYin_t4Kme-9bqQbPc"; 
+
+        let globalSessions = []; 
+        let currentSessionId = null;
+        let pendingAttachment = null; 
+        let userConfig = { username: "TKV", theme: "dark" };
+
+        window.codeBlocksRegistry = [];
+
+        function initApp() {
+            // Load Settings người dùng
+            const storedConfig = localStorage.getItem('studio_user_config_vault');
+            if (storedConfig) {
+                try {
+                    userConfig = JSON.parse(storedConfig);
+                    displayUsernameText.innerText = userConfig.username;
+                    inputUsernameField.value = userConfig.username;
+                    themeSelectField.value = userConfig.theme;
+                    document.documentElement.setAttribute('data-theme', userConfig.theme);
+                } catch(e) { console.error(e); }
+            }
+
+            const cache = localStorage.getItem('studio_multichat_vault');
+            if (cache) {
+                try { globalSessions = JSON.parse(cache); } catch(e) { globalSessions = []; }
+            }
+
+            if (!Array.isArray(globalSessions) || globalSessions.length === 0) {
+                globalSessions = [];
+                createNewSession("Phiên thảo luận ban đầu");
+            } else {
+                currentSessionId = globalSessions[0].id;
+                renderSidebar();
+                renderChatFlow();
+            }
+            autoScaleInput();
+            setupEventListeners();
+        }
+
+        function setupEventListeners() {
+            btnNewChat.addEventListener('click', () => createNewSession());
+            sendBtn.addEventListener('click', sendAction);
+            paperclipBtn.addEventListener('click', () => hiddenFileInput.click());
+            hiddenFileInput.addEventListener('change', handleFileSelection);
+
+            // Bật tắt Modals
+            accountPanelBtn.addEventListener('click', (e) => {
+                if(e.target === upgradePillBtn) return;
+                settingsModal.style.display = 'flex';
+            });
+            upgradePillBtn.addEventListener('click', () => pricingModal.style.display = 'flex');
+            closeSettingsBtn.addEventListener('click', () => settingsModal.style.display = 'none');
+            closePricingBtn.addEventListener('click', () => pricingModal.style.display = 'none');
+            
+            btnSaveSettings.addEventListener('click', () => {
+                const newName = inputUsernameField.value.trim();
+                if(newName) {
+                    userConfig.username = newName;
+                    displayUsernameText.innerText = newName;
+                }
+                userConfig.theme = themeSelectField.value;
+                document.documentElement.setAttribute('data-theme', userConfig.theme);
+                localStorage.setItem('studio_user_config_vault', JSON.stringify(userConfig));
+                settingsModal.style.display = 'none';
+            });
+        }
+
+        function saveVault() {
+            localStorage.setItem('studio_multichat_vault', JSON.stringify(globalSessions));
+        }
+
+        function createNewSession(customTitle = null) {
+            const newId = 'session_' + Date.now();
+            const title = customTitle || `Phiên lập trình #${globalSessions.length + 1}`;
+            const newSessionObj = { id: newId, title: title, history: [] };
+            globalSessions.unshift(newSessionObj);
+            currentSessionId = newId;
+            saveVault();
+            renderSidebar();
+            renderChatFlow();
+            clearFileQueue();
+            userInput.value = "";
+            autoScaleInput();
+        }
+
+        function switchSession(id) {
+            if (currentSessionId === id) return;
+            currentSessionId = id;
+            renderSidebar();
+            renderChatFlow();
+            clearFileQueue();
+            userInput.value = "";
+            autoScaleInput();
+        }
+
+        function renameSession(id, e) {
+            e.stopPropagation();
+            const target = globalSessions.find(s => s.id === id);
+            if (!target) return;
+            const newTitle = prompt("Nhập tên mới:", target.title);
+            if (newTitle && newTitle.trim() !== "") {
+                target.title = newTitle.trim();
+                saveVault();
+                renderSidebar();
+            }
+        }
+
+        function deleteSession(id, e) {
+            e.stopPropagation();
+            if (confirm("Xóa vĩnh viễn phiên chat này không?")) {
+                const index = globalSessions.findIndex(s => s.id === id);
+                if (index === -1) return;
+                globalSessions.splice(index, 1);
+                if (globalSessions.length === 0) {
+                    createNewSession("Phiên thảo luận ban đầu");
+                } else {
+                    if (currentSessionId === id) currentSessionId = globalSessions[0].id;
+                    saveVault();
+                    renderSidebar();
+                    renderChatFlow();
+                }
+            }
+        }
+
+        function downloadStoredFile(name, dataUri) {
+            const tempLink = document.createElement('a');
+            tempLink.href = dataUri;
+            tempLink.download = name;
+            document.body.appendChild(tempLink);
+            tempLink.click();
+            document.body.removeChild(tempLink);
+        }
+
+        function renderSidebar() {
+            sessionListZone.innerHTML = "";
+            globalSessions.forEach(session => {
+                const div = document.createElement('div');
+                div.className = `session-item ${session.id === currentSessionId ? 'active' : ''}`;
+                div.onclick = () => switchSession(session.id);
+                div.innerHTML = `
+                    <div class="session-title-wrapper">
+                        <i class="fa-regular fa-message"></i>
+                        <span class="session-title">${cleanHTML(session.title)}</span>
+                    </div>
+                    <div class="session-actions">
+                        <button class="action-icon" onclick="renameSession('${session.id}', event)"><i class="fa-solid fa-pen"></i></button>
+                        <button class="action-icon delete" onclick="deleteSession('${session.id}', event)"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                `;
+                sessionListZone.appendChild(div);
+            });
+        }
+
+        function renderChatFlow() {
+            chatHistoryContent.innerHTML = "";
+            window.codeBlocksRegistry = [];
+            const activeSession = globalSessions.find(s => s.id === currentSessionId);
+            if (!activeSession) return;
+
+            if (activeSession.history.length === 0) {
+                chatHistoryContent.innerHTML = `
+                    <div class="welcome-screen">
+                        <i class="fa-solid fa-bezier-curve"></i>
+                        <h2>Advanced AI Studio Pro VN</h2>
+                        <p>Không gian biên dịch thuật toán tối cao. Hãy gửi yêu cầu lập trình hoặc tính toán công thức khoa học.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            activeSession.history.forEach((msg, idx) => {
+                if (msg.role === 'user') {
+                    let buildContent = cleanHTML(msg.content).replace(/\n/g, '<br>');
+                    if (msg.fileAttached) {
+                        const uniqueId = `file_history_${currentSessionId}_${idx}`;
+                        window[uniqueId] = msg.fileAttached.data; 
+                        if (msg.fileAttached.type === 'image') {
+                            buildContent += `<img src="${msg.fileAttached.data}" class="attached-image-preview" onclick="downloadStoredFile('${msg.fileAttached.name}', window['${uniqueId}'])" />`;
+                        } else {
+                            buildContent += `<br><div class="file-attachment-tag" onclick="downloadStoredFile('${msg.fileAttached.name}', window['${uniqueId}'])"><i class="fa-solid fa-file-code"></i> ${cleanHTML(msg.fileAttached.name)}</div>`;
+                        }
+                    }
+                    printRowHTML('user', buildContent);
+                } else {
+                    const area = printRowHTML('assistant', '');
+                    area.innerHTML = parseMarkdownAndCode(msg.content);
+                }
+            });
+
+            triggerMathJaxCompilation();
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        function printRowHTML(role, content) {
+            const div = document.createElement('div');
+            div.className = `message-row ${role}`;
+            const icon = role === 'user' ? '<i class="fa-solid fa-user"></i>' : '<i class="fa-solid fa-robot"></i>';
+            div.innerHTML = `<div class="avatar">${icon}</div><div class="bubble">${content}</div>`;
+            chatHistoryContent.appendChild(div);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+            return div.querySelector('.bubble');
+        }
+
+        function triggerMathJaxCompilation() {
+            if (window.MathJax && typeof window.MathJax.typesetPromise === 'function') {
+                window.MathJax.typesetPromise([chatHistoryContent]).catch((err) => console.error(err));
+            }
+        }
+
+        function handleFileSelection(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            if (file.type.startsWith('image/')) {
+                reader.onload = function(evt) {
+                    pendingAttachment = { type: 'image', name: file.name, mimeType: file.type, data: evt.target.result };
+                    displayQueueBar();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                reader.onload = function(evt) {
+                    pendingAttachment = { type: 'code', name: file.name, mimeType: 'text/plain', data: `data:text/plain;charset=utf-8,${encodeURIComponent(evt.target.result)}`, rawContent: evt.target.result };
+                    displayQueueBar();
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function displayQueueBar() {
+            if (!pendingAttachment) return;
+            uploadQueueBar.style.display = 'flex';
+            const icon = pendingAttachment.type === 'image' ? 'fa-image' : 'fa-file-code';
+            uploadQueueBar.innerHTML = `
+                <div class="queue-item">
+                    <i class="fa-solid ${icon}" style="color:var(--accent-color)"></i>
+                    <span>${cleanHTML(pendingAttachment.name)}</span>
+                    <button class="remove-queue-btn" id="clearQueueBtn"><i class="fa-solid fa-circle-xmark"></i></button>
+                </div>
+            `;
+            document.getElementById('clearQueueBtn').addEventListener('click', clearFileQueue);
+            autoScaleInput();
+        }
+
+        function clearFileQueue() {
+            pendingAttachment = null;
+            hiddenFileInput.value = "";
+            uploadQueueBar.style.display = 'none';
+            autoScaleInput();
+        }
+
+        // TỰ ĐỘNG BỘ PHÂN TÍCH TYPOGRAPHY / MARKDOWN / LATEX PHỨC TẠP
+        function parseMarkdownAndCode(text) {
+            let partsRendered = [];
+            let segmentRegex = /```([\s\S]*?)```/g;
+            let lastIndex = 0;
+            let currentMatch;
+            
+            while ((currentMatch = segmentRegex.exec(text)) !== null) {
+                let plainTextSegment = text.substring(lastIndex, currentMatch.index);
+                if (plainTextSegment) partsRendered.push(processTypography(plainTextSegment));
+                
+                let codeWithLang = currentMatch[1];
+                let splitLines = codeWithLang.split('\n');
+                let languageTag = splitLines[0].trim();
+                let actualBody = codeWithLang;
+                
+                if (['python', 'javascript', 'html', 'css', 'cpp', 'java', 'c', 'json', 'bash'].includes(languageTag.toLowerCase())) {
+                    splitLines.shift();
+                    actualBody = splitLines.join('\n');
+                }
+                
+                if (actualBody.endsWith('\n')) actualBody = actualBody.slice(0, -1);
+                const nextIndex = window.codeBlocksRegistry.length;
+                window.codeBlocksRegistry.push(actualBody);
+                
+                partsRendered.push(`
+                    <div class="code-block-container">
+                        <div class="code-header">
+                            <span><i class="fa-solid fa-code" style="color:var(--accent-color); margin-right:6px;"></i>Source Code Block</span>
+                            <button class="copy-btn" onclick="executeRegistryCopy(this, ${nextIndex})"><i class="fa-regular fa-copy"></i> Copy</button>
+                        </div>
+                        <pre><code>${cleanHTML(actualBody)}</code></pre>
+                    </div>
+                `);
+                lastIndex = segmentRegex.lastIndex;
+            }
+            
+            let trailingSegment = text.substring(lastIndex);
+            if (trailingSegment) partsRendered.push(processTypography(trailingSegment));
+            return partsRendered.join('');
+        }
+
+        function processTypography(rawText) {
+            let processed = cleanHTML(rawText);
+            
+            // Render Heading 3 (###)
+            processed = processed.replace(/^###\ (.*?)$/gm, '<h3>$1</h3>');
+            // Render Bullet points (*)
+            processed = processed.replace(/^\*\ (.*?)$/gm, '<li>$1</li>');
+            // Bao bọc cụm thẻ danh sách nếu xuất hiện dòng li
+            if(processed.includes('<li>')) {
+                processed = processed.replace(/(<li>.*?<\/li>)/gs, '<ul>$1</ul>');
+            }
+            
+            // Cú pháp in đậm **text**
+            processed = processed.replace(/\*\*([\s\S]*?)\*\*/g, '<strong>$1</strong>');
+            
+            let textLines = processed.split('\n');
+            for (let i = 0; i < textLines.length; i++) {
+                if (textLines[i].startsWith('&gt; ')) {
+                    textLines[i] = `<blockquote>${textLines[i].substring(5)}</blockquote>`;
+                }
+            }
+            return textLines.join('<br>');
+        }
+
+        function autoScaleInput() {
+            userInput.style.height = '24px'; 
+            if (userInput.value.length > 0 || pendingAttachment !== null) {
+                sendBtn.classList.add("send-btn-active");
+            } else {
+                sendBtn.classList.remove("send-btn-active");
+            }
+            const targetHeight = userInput.scrollHeight;
+            if (targetHeight > 24) userInput.style.height = Math.min(targetHeight, 240) + 'px';
+        }
+
+        userInput.addEventListener('input', autoScaleInput);
+        userInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                if (userInput.value.trim() !== "" || pendingAttachment) {
+                    e.preventDefault();
+                    sendAction();
+                }
+            }
+        });
+
+        async function sendAction() {
+            const textValue = userInput.value.trim();
+            if (!textValue && !pendingAttachment) return;
+
+            if (globalSessions.length === 0 || !currentSessionId) createNewSession();
+            const activeSession = globalSessions.find(s => s.id === currentSessionId);
+            if (!activeSession) return;
+
+            const welcomeNode = chatHistoryContent.querySelector('.welcome-screen');
+            if (welcomeNode) welcomeNode.remove();
+
+            const chosenModelName = modelSelector.value;
+            let payloadText = textValue;
+            let currentTurnFileObject = null;
+
+            if (pendingAttachment) {
+                currentTurnFileObject = { ...pendingAttachment };
+                if (pendingAttachment.type === 'code') {
+                    payloadText += `\n\n[Nội dung tệp đính kèm bổ sung: ${pendingAttachment.name}]\n\`\`\`\n${pendingAttachment.rawContent}\n\`\`\``;
+                }
+            }
+
+            const currentTurnIdx = activeSession.history.length;
+            const uniqueId = `file_history_${currentSessionId}_${currentTurnIdx}`;
+            if (currentTurnFileObject) window[uniqueId] = currentTurnFileObject.data;
+
+            let userDisplayBubbleText = cleanHTML(textValue).replace(/\n/g, '<br>');
+            if (currentTurnFileObject) {
+                if (currentTurnFileObject.type === 'image') {
+                    userDisplayBubbleText += `<img src="${currentTurnFileObject.data}" class="attached-image-preview" onclick="downloadStoredFile('${currentTurnFileObject.name}', window['${uniqueId}'])" />`;
+                } else {
+                    userDisplayBubbleText += `<br><div class="file-attachment-tag" onclick="downloadStoredFile('${currentTurnFileObject.name}', window['${uniqueId}'])"><i class="fa-solid fa-file-code"></i> ${cleanHTML(currentTurnFileObject.name)}</div>`;
+                }
+            }
+            
+            printRowHTML('user', userDisplayBubbleText);
+            activeSession.history.push({
+                "role": "user", "content": payloadText,
+                "fileAttached": currentTurnFileObject ? { type: currentTurnFileObject.type, name: currentTurnFileObject.name, mimeType: currentTurnFileObject.mimeType, data: currentTurnFileObject.data, rawContent: currentTurnFileObject.rawContent || undefined } : undefined
+            });
+            saveVault();
+
+            if (activeSession.title.startsWith("Phiên lập trình #") || activeSession.title === "Phiên thảo luận ban đầu") {
+                activeSession.title = textValue ? textValue.split(' ').slice(0, 5).join(' ') + '...' : "Xử lý dữ liệu tệp";
+                renderSidebar();
+            }
+
+            clearFileQueue();
+            userInput.value = "";
+            autoScaleInput();
+
+            const aiArea = printRowHTML('assistant', `<span style="color:var(--text-muted);"><i class="fa-solid fa-satellite-dish fa-spin" style="color:var(--accent-color)"></i> Kích hoạt lõi AI và cấu hình định dạng nâng cao...</span>`);
+            await executeFetchWithRetry(chosenModelName, activeSession, aiArea, 1);
+        }
+
+        async function executeFetchWithRetry(chosenModelName, activeSession, aiArea, attempt) {
+            try {
+                let geminiContents = [];
+                let customSystemPrompt = `You are a high-level artificial intelligence assistant. Your user profile name is "${userConfig.username}", holding a Premium Elite membership status. You must respond perfectly based on the user's specific context.`;
+                
+                if (chosenModelName === "GPT Pro Codex") {
+                    customSystemPrompt += ` CRITICAL IDENTITY DIRECTIVE: Your official model name is "GPT Pro Codex". Under NO circumstances should you mention Gemini or Google. If asked about your identity or what model you are, you must answer directly and confidently that you are "GPT Pro Codex" optimized for high-end software development.`;
+                } else if (chosenModelName.startsWith("Claude")) {
+                    customSystemPrompt += ` CRITICAL IDENTITY DIRECTIVE: Your official name is exactly "${chosenModelName}". You must emulate the tone of Claude: extremely analytical, calm, highly precise, objective, and deeply detailed in code blocks. If the user asks what model you are or who made you, you must proudly declare that you are "${chosenModelName}". Never reveal your underlying architecture.`;
+                } else {
+                    customSystemPrompt += ` CRITICAL IDENTITY DIRECTIVE: Your official model name is exactly "${chosenModelName}". If the user asks what model you are, answer "${chosenModelName}" clearly.`;
+                }
+
+                activeSession.history.forEach(msg => {
+                    let parts = [];
+                    if (msg.fileAttached && msg.fileAttached.type === 'image') {
+                        parts.push({ inlineData: { mimeType: msg.fileAttached.mimeType, data: msg.fileAttached.data.split(',')[1] } });
+                    }
+                    parts.push({ text: msg.content });
+                    geminiContents.push({ role: msg.role === 'user' ? 'user' : 'model', parts: parts });
+                });
+
+                const response = await fetch(`${GEMINI_35_GATEWAY_URL}?key=${GEMINI_GATEWAY_KEY}`, {
+                    method: 'POST', headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ contents: geminiContents, systemInstruction: { parts: [{ text: customSystemPrompt }] } })
+                });
+
+                const jsonRes = await response.json();
+                if (response.ok && jsonRes.candidates && jsonRes.candidates[0]) {
+                    aiArea.innerHTML = "";
+                    const aiReply = jsonRes.candidates[0].content.parts[0].text;
+                    activeSession.history.push({"role": "assistant", "content": aiReply});
+                    saveVault();
+                    applyTypewriterEffect(aiArea, aiReply);
+                } else { throw new Error(); }
+            } catch (err) {
+                if (attempt < 3) setTimeout(() => executeFetchWithRetry(chosenModelName, activeSession, aiArea, attempt + 1), 2000);
+                else aiArea.innerHTML = `<span style="color:#ea4335;"><i class="fa-solid fa-triangle-exclamation"></i> Lỗi kết nối Gate Cloud! Vui lòng bấm thử lại.</span>`;
+            }
+        }
+
+        function applyTypewriterEffect(targetElement, fullText) {
+            let index = 0; const pace = 6; 
+            function run() {
+                if (index < fullText.length) {
+                    index += pace;
+                    targetElement.innerHTML = parseMarkdownAndCode(fullText.substring(0, index));
+                    chatHistory.scrollTop = chatHistory.scrollHeight;
+                    requestAnimationFrame(run);
+                } else {
+                    targetElement.innerHTML = parseMarkdownAndCode(fullText);
+                    triggerMathJaxCompilation();
+                }
+            }
+            requestAnimationFrame(run);
+        }
+
+        function executeRegistryCopy(btn, index) {
+            const targetCode = window.codeBlocksRegistry[index];
+            if (targetCode !== undefined) {
+                navigator.clipboard.writeText(targetCode).then(() => {
+                    btn.innerHTML = `<i class="fa-solid fa-check" style="color:var(--accent-color);"></i> Copied!`;
+                    setTimeout(() => { btn.innerHTML = `<i class="fa-regular fa-copy"></i> Copy`; }, 2000);
+                });
+            }
+        }
+
+        function cleanHTML(str) { return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>
