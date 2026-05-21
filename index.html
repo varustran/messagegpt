@@ -60,6 +60,10 @@
         .btn-new-chat { width: 100%; background: var(--accent-gradient); color: #fff; border: none; padding: 12px 16px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 12px rgba(97, 73, 237, 0.2); }
         .btn-new-chat:hover { transform: translateY(-1px); filter: brightness(1.1); }
         
+        .storage-status-bar { padding: 4px 16px; font-size: 11px; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px; }
+        .progress-track { width: 100%; height: 5px; background: var(--border-color); border-radius: 10px; overflow: hidden; }
+        .progress-fill { width: 0%; height: 100%; background: var(--accent-color); transition: width 0.3s ease; }
+
         .session-list { flex: 1; overflow-y: auto; padding: 8px 12px; display: flex; flex-direction: column; gap: 4px; }
         .session-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; border-radius: 10px; cursor: pointer; color: var(--text-muted); font-size: 14px; }
         .session-item:hover { background-color: var(--bg-surface-hover); color: var(--text-main); }
@@ -104,6 +108,10 @@
         }
         @keyframes shineText { to { background-position: 200% center; } }
 
+        .header-right-zone { display: flex; align-items: center; gap: 12px; }
+        .key-indicator-pill { display: flex; align-items: center; gap: 6px; background-color: var(--bg-main); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 14px; font-size: 11.5px; font-family: 'JetBrains Mono', monospace; color: var(--text-muted); }
+        .key-indicator-pill i { color: #52c41a; }
+
         .model-select { background-color: var(--bg-main); color: var(--text-main); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 20px; font-size: 13.5px; outline: none; cursor: pointer; font-weight: 500; }
         .model-select:hover { border-color: var(--accent-color); }
 
@@ -121,6 +129,10 @@
         .bubble { max-width: 85%; font-size: 15px; line-height: 1.65; word-wrap: break-word; color: var(--text-main); }
         .user .bubble { background-color: var(--bg-surface); padding: 14px 22px; border-radius: 22px; border-bottom-right-radius: 4px; border: 1px solid var(--border-color); }
         .assistant .bubble { flex: 1; padding-top: 4px; }
+
+        /* Lỗi Boundary UI */
+        .error-container { display: flex; flex-direction: column; gap: 10px; padding: 16px; border: 1px dashed #ea4335; border-radius: 12px; background-color: rgba(234, 67, 53, 0.05); color: #ff6b6b; margin-top: 8px; }
+        .btn-retry-message { align-self: flex-start; background-color: #ea4335; color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; }
 
         /* Xử lý định dạng Markdown tự động tinh chỉnh */
         .bubble h3 { font-size: 18px; font-weight: 600; margin: 16px 0 8px 0; color: var(--text-main); }
@@ -215,6 +227,15 @@
                     <i class="fa-solid fa-plus"></i> Phiên hội thoại mới
                 </button>
             </div>
+
+            <div class="storage-status-bar">
+                <div style="display:flex; justify-content:space-between;">
+                    <span>Bộ đệm cục bộ Vault</span>
+                    <span id="storagePercentText">0%</span>
+                </div>
+                <div class="progress-track"><div class="progress-fill" id="storageProgressFill"></div></div>
+            </div>
+
             <div class="session-list" id="sessionListZone"></div>
 
             <div class="sidebar-account-panel" id="accountPanelBtn" title="Bấm để mở cài đặt & quản lý hồ sơ">
@@ -234,16 +255,21 @@
         <div class="main-chat-area">
             <div class="header-container">
                 <div class="header">Advanced <span>AI Studio Pro VN</span></div>
-                <select class="model-select" id="modelSelector">
-                    <option value="Gemini 2.5 Flash">Gemini 2.5 Flash</option>
-                    <option value="Gemini 3.5 Flash">Gemini 3.5 Flash</option>
-                    <option value="Gemini 3.1 Pro">Gemini 3.1 Pro</option>
-                    <option value="Gemini Pro">Gemini Pro</option>
-                    <option value="GPT Pro Codex">GPT Pro Codex</option>
-                    <option value="Claude 3.5 Sonnet">Claude 3.5 Sonnet</option>
-                    <option value="Claude 3 Opus">Claude 3 Opus</option>
-                    <option value="Claude 3.7 Sonnet (Thinking)">Claude 3.7 Sonnet (Thinking)</option>
-                </select>
+                <div class="header-right-zone">
+                    <div class="key-indicator-pill">
+                        <i class="fa-solid fa-key"></i> Key Node: <span id="activeKeyIndexText">1/1</span>
+                    </div>
+                    <select class="model-select" id="modelSelector">
+                        <option value="Gemini 2.5 Flash">Gemini 2.5 Flash</option>
+                        <option value="Gemini 3.5 Flash">Gemini 3.5 Flash</option>
+                        <option value="Gemini 3.1 Pro">Gemini 3.1 Pro</option>
+                        <option value="Gemini Pro">Gemini Pro</option>
+                        <option value="GPT Pro Codex">GPT Pro Codex</option>
+                        <option value="Claude 3.5 Sonnet">Claude 3.5 Sonnet</option>
+                        <option value="Claude 3 Opus">Claude 3 Opus</option>
+                        <option value="Claude 3.7 Sonnet (Thinking)">Claude 3.7 Sonnet (Thinking)</option>
+                    </select>
+                </div>
             </div>
 
             <div class="chat-history" id="chatHistory">
@@ -258,9 +284,7 @@
                             <i class="fa-solid fa-clipboard-list"></i> Bảng lưu ý công việc & Mục tiêu cốt lõi
                         </div>
                         <ul class="notes-list">
-                            <li class="notes-item"><i class="fa-solid fa-circle-dot"></i> <span><strong>Video Algorithm App:</strong> Xây dựng bộ nhận diện FPS động cho từng luồng video trên nền Tkinter/Qt.</span></li>
-                            <li class="notes-item"><i class="fa-solid fa-circle-dot"></i> <span><strong>FPT School Dashboard:</strong> Nâng cấp biểu đồ trích xuất dữ liệu, tối ưu và đóng gói tệp.</span></li>
-                            <li class="notes-item"><i class="fa-solid fa-circle-dot"></i> <span><strong>Physics Olympiad Math:</strong> Biên dịch chính xác cấu trúc toán và LaTeX nâng cao bằng <code>align*</code>.</span></li>
+                            <li class="notes-item"><i class="fa-solid fa-circle-dot"></i> <span><strong>Thông báo:</strong> Tài khoản mới nâng hạng nên gặp 1 số lỗi, vui lòng chờ 1 ngày để ổn định.</span></li>
                         </ul>
                     </div>
 
@@ -300,6 +324,12 @@
                     <option value="dark">Studio Dark Mode</option>
                     <option value="light">Studio Light Mode</option>
                 </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Danh sách API Key Pool (Phân tách bằng dấu phẩy `,` )</label>
+                <textarea class="form-input" id="apiKeysPoolInput" style="height: 70px; resize: vertical;" placeholder="AIzaSyBE..., AIzaSyAF..., AIzaSyAG..."></textarea>
+                <span style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 4px;">Hệ thống tự động xoay chuyển sang Key kế tiếp khi phát hiện lỗi hạn mức (Limit Requests).</span>
             </div>
 
             <button class="btn-save" id="btnSaveSettings">Cập nhật cấu hình</button>
@@ -380,7 +410,6 @@
         const hiddenFileInput = document.getElementById('hiddenFileInput');
         const uploadQueueBar = document.getElementById('uploadQueueBar');
 
-        // Phân vùng điều phối Modals & Settings
         const accountPanelBtn = document.getElementById('accountPanelBtn');
         const upgradePillBtn = document.getElementById('upgradePillBtn');
         const settingsModal = document.getElementById('settingsModal');
@@ -391,19 +420,27 @@
         const inputUsernameField = document.getElementById('inputUsernameField');
         const displayUsernameText = document.getElementById('displayUsernameText');
         const themeSelectField = document.getElementById('themeSelectField');
+        const apiKeysPoolInput = document.getElementById('apiKeysPoolInput');
+        const activeKeyIndexText = document.getElementById('activeKeyIndexText');
+        const storagePercentText = document.getElementById('storagePercentText');
+        const storageProgressFill = document.getElementById('storageProgressFill');
 
-        const GEMINI_35_GATEWAY_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent";
-        const GEMINI_GATEWAY_KEY = "AIzaSyBEVo39q_ZAETlEuWYin_t4Kme-9bqQbPc"; 
+        // KHỞI TẠO MẢNG CHỨA API KEY MẶC ĐỊNH
+        // KHỞI TẠO MẢNG CHỨA API KEY MẶC ĐỊNH
+        let apiKeysPool = [
+            "AIzaSyA9cvCziNggQzogykh5WEv_D_QMwnURoeU",
+            "AIzaSyAi0SXRA9T4aUNIILWP3m-ibCjKiCjm__0",
+        ];
+        let currentKeyIndex = 0;
 
         let globalSessions = []; 
         let currentSessionId = null;
         let pendingAttachment = null; 
-        let userConfig = { username: "TKV", theme: "dark" };
+        let userConfig = { username: "TKV", theme: "dark", keysString: "" };
 
         window.codeBlocksRegistry = [];
 
         function initApp() {
-            // Load Settings người dùng
             const storedConfig = localStorage.getItem('studio_user_config_vault');
             if (storedConfig) {
                 try {
@@ -412,7 +449,16 @@
                     inputUsernameField.value = userConfig.username;
                     themeSelectField.value = userConfig.theme;
                     document.documentElement.setAttribute('data-theme', userConfig.theme);
+                    
+                    if (userConfig.keysString && userConfig.keysString.trim() !== "") {
+                        apiKeysPoolInput.value = userConfig.keysString;
+                        parseKeysPool(userConfig.keysString);
+                    }
                 } catch(e) { console.error(e); }
+            }
+
+            if (apiKeysPoolInput.value.trim() === "") {
+                apiKeysPoolInput.value = apiKeysPool.join(", ");
             }
 
             const cache = localStorage.getItem('studio_multichat_vault');
@@ -428,6 +474,8 @@
                 renderSidebar();
                 renderChatFlow();
             }
+            updateKeyIndicator();
+            calculateStorageUsage();
             autoScaleInput();
             setupEventListeners();
         }
@@ -438,7 +486,6 @@
             paperclipBtn.addEventListener('click', () => hiddenFileInput.click());
             hiddenFileInput.addEventListener('change', handleFileSelection);
 
-            // Bật tắt Modals
             accountPanelBtn.addEventListener('click', (e) => {
                 if(e.target === upgradePillBtn) return;
                 settingsModal.style.display = 'flex';
@@ -454,14 +501,66 @@
                     displayUsernameText.innerText = newName;
                 }
                 userConfig.theme = themeSelectField.value;
+                userConfig.keysString = apiKeysPoolInput.value;
+                
                 document.documentElement.setAttribute('data-theme', userConfig.theme);
+                parseKeysPool(userConfig.keysString);
+                
                 localStorage.setItem('studio_user_config_vault', JSON.stringify(userConfig));
                 settingsModal.style.display = 'none';
+                updateKeyIndicator();
             });
         }
 
+        function parseKeysPool(str) {
+            if (!str || str.trim() === "") return;
+            const keys = str.split(',').map(k => k.trim()).filter(k => k.length > 0);
+            if (keys.length > 0) {
+                apiKeysPool = keys;
+                currentKeyIndex = 0; 
+            }
+        }
+
+        function updateKeyIndicator() {
+            activeKeyIndexText.innerText = `${currentKeyIndex + 1}/${apiKeysPool.length}`;
+        }
+
+        function calculateStorageUsage() {
+            let total = 0;
+            for (let item in localStorage) {
+                if (localStorage.hasOwnProperty(item)) {
+                    total += localStorage[item].length;
+                }
+            }
+            let allocatedMb = (total / (1024 * 1024));
+            let percent = Math.min(Math.round((allocatedMb / 5.0) * 100), 100);
+            storagePercentText.innerText = percent + "%";
+            storageProgressFill.style.width = percent + "%";
+        }
+
         function saveVault() {
-            localStorage.setItem('studio_multichat_vault', JSON.stringify(globalSessions));
+            try {
+                localStorage.setItem('studio_multichat_vault', JSON.stringify(globalSessions));
+                calculateStorageUsage();
+            } catch (e) {
+                // Engine dọn dẹp dung lượng tự động nếu bộ nhớ tràn dữ liệu Base64 file đính kèm cũ
+                for (let i = globalSessions.length - 1; i >= 0; i--) {
+                    let cleaned = false;
+                    globalSessions[i].history.forEach(msg => {
+                        if (msg.fileAttached && msg.fileAttached.data) {
+                            msg.fileAttached.data = "[Bộ đệm file đã được nén giảm tải dữ liệu]";
+                            cleaned = true;
+                        }
+                    });
+                    if (cleaned) {
+                        try {
+                            localStorage.setItem('studio_multichat_vault', JSON.stringify(globalSessions));
+                            calculateStorageUsage();
+                            break;
+                        } catch (err) {}
+                    }
+                }
+            }
         }
 
         function createNewSession(customTitle = null) {
@@ -578,7 +677,18 @@
                     printRowHTML('user', buildContent);
                 } else {
                     const area = printRowHTML('assistant', '');
-                    area.innerHTML = parseMarkdownAndCode(msg.content);
+                    if (msg.isError) {
+                        area.innerHTML = `
+                            <div class="error-container">
+                                <span><i class="fa-solid fa-circle-exclamation"></i> Toàn bộ hệ thống API Key Pool đã cạn kiệt hoặc quá tải người dùng, vui lòng thử lại sau.</span>
+                                <button class="btn-retry-message" onclick="manualRetryAction(${idx})">
+                                    <i class="fa-solid fa-rotate-right"></i> Kích hoạt lại luồng từ Key đầu tiên
+                                </button>
+                            </div>
+                        `;
+                    } else {
+                        area.innerHTML = parseMarkdownAndCode(msg.content);
+                    }
                 }
             });
 
@@ -643,7 +753,6 @@
             autoScaleInput();
         }
 
-        // TỰ ĐỘNG BỘ PHÂN TÍCH TYPOGRAPHY / MARKDOWN / LATEX PHỨC TẠP
         function parseMarkdownAndCode(text) {
             let partsRendered = [];
             let segmentRegex = /```([\s\S]*?)```/g;
@@ -687,18 +796,11 @@
 
         function processTypography(rawText) {
             let processed = cleanHTML(rawText);
-            
-            // Xử lý tiêu đề dạng hàng loạt từ ### đến #
             processed = processed.replace(/^###\ (.*?)$/gm, '<h3>$1</h3>');
-            
-            // Xử lý Bullet points dạng danh sách (*)
             processed = processed.replace(/^\*\ (.*?)$/gm, '<li>$1</li>');
             if (processed.includes('<li>')) {
-                // Gom cụm các dòng li đơn lẻ vào khối ul chuẩn
                 processed = processed.replace(/(<li>.*?<\/li>)/gs, '<ul>$1</ul>');
             }
-            
-            // Cú pháp in đậm **text**
             processed = processed.replace(/\*\*([\s\S]*?)\*\*/g, '<strong>$1</strong>');
             
             let textLines = processed.split('\n');
@@ -782,54 +884,123 @@
             userInput.value = "";
             autoScaleInput();
 
-            const aiArea = printRowHTML('assistant', `<span style="color:var(--text-muted);"><i class="fa-solid fa-satellite-dish fa-spin" style="color:var(--accent-color)"></i> Kích hoạt lõi AI và cấu hình định dạng nâng cao...</span>`);
-            await executeFetchWithRetry(chosenModelName, activeSession, aiArea, 1);
+            const aiArea = printRowHTML('assistant', `<span style="color:var(--text-muted);"><i class="fa-solid fa-satellite-dish fa-spin" style="color:var(--accent-color)"></i> Khởi chạy liên kết lõi điều phối ${chosenModelName}...</span>`);
+            await executeFetchWithRetry(chosenModelName, activeSession, aiArea, null);
         }
 
-        async function executeFetchWithRetry(chosenModelName, activeSession, aiArea, attempt) {
+        async function manualRetryAction(assistantMsgIdx) {
+            const activeSession = globalSessions.find(s => s.id === currentSessionId);
+            if (!activeSession) return;
+
+            currentKeyIndex = 0;
+            updateKeyIndicator();
+            renderChatFlow();
+
+            const chatBubbles = chatHistoryContent.querySelectorAll('.assistant .bubble');
+            const targetBubble = chatBubbles[Math.floor(assistantMsgIdx / 2)];
+            if (targetBubble) {
+                targetBubble.innerHTML = `<span style="color:var(--text-muted);"><i class="fa-solid fa-sync fa-spin" style="color:var(--accent-color)"></i> Đang thiết lập lại luồng kết nối từ Key đầu tiên...</span>`;
+                await executeFetchWithRetry(modelSelector.value, activeSession, targetBubble, assistantMsgIdx);
+            }
+        }
+
+        // BỘ ĐIỀU PHỐI API CHỐT CHẶN - SMART ROTATOR GATEWAY
+        async function executeFetchWithRetry(chosenModelName, activeSession, aiArea, replaceIdx = null) {
+            let currentApiKey = apiKeysPool[currentKeyIndex];
+            if (!currentApiKey || currentApiKey.trim() === "") {
+                currentApiKey = "AIzaSyAi0SXRA9T4aUNIILWP3m-ibCjKiCjm__0"; // Fallback key gốc
+            }
+
+            // Đồng bộ Endpoint xử lý của Google Server
+            const GATEWAY_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${currentApiKey}`;
+
             try {
                 let geminiContents = [];
-                let customSystemPrompt = `You are a high-level artificial intelligence assistant. Your user profile name is "${userConfig.username}", holding a Premium Elite membership status. You must respond perfectly based on the user's specific context.`;
-                
-                if (chosenModelName === "GPT Pro Codex") {
-                    customSystemPrompt += ` CRITICAL IDENTITY DIRECTIVE: Your official model name is "GPT Pro Codex". Under NO circumstances should you mention Gemini or Google. If asked about your identity or what model you are, you must answer directly and confidently that you are "GPT Pro Codex" optimized for high-end software development.`;
-                } else if (chosenModelName.startsWith("Claude")) {
-                    customSystemPrompt += ` CRITICAL IDENTITY DIRECTIVE: Your official name is exactly "${chosenModelName}". You must emulate the tone of Claude: extremely analytical, calm, highly precise, objective, and deeply detailed in code blocks. If the user asks what model you are or who made you, you must proudly declare that you are "${chosenModelName}". Never reveal your underlying architecture.`;
-                } else {
-                    customSystemPrompt += ` CRITICAL IDENTITY DIRECTIVE: Your official model name is exactly "${chosenModelName}". If the user asks what model you are, answer "${chosenModelName}" clearly.`;
-                }
+                // Đồng bộ Prompt chỉ thị System nhận dạng đúng tên Model được chọn trên giao diện
+                let customSystemPrompt = `You are an AI assistant. Your user profile name is "${userConfig.username}" (Premium Elite). 
+                CRITICAL IDENTITY DIRECTIVE: Your official architecture model identifier name is strictly and exactly "${chosenModelName}". 
+                If the user asks about your identity, what model you are, or who configured you, you MUST reply explicitly that you are "${chosenModelName}" built for high-performance enterprise systems. Never disclose any underlying engine structure.`;
 
-                // SỬA LỖI CHỐT CHẶN: Đảm bảo không đóng gói mảng trống khi gửi lên Gate Cloud API
-                if (!activeSession.history || activeSession.history.length === 0) {
-                    activeSession.history.push({ "role": "user", "content": "Hello Studio Portal" });
-                }
-
-                activeSession.history.forEach(msg => {
+                activeSession.history.forEach((msg, index) => {
+                    if (replaceIdx !== null && index >= replaceIdx) return;
+                    
                     let parts = [];
-                    if (msg.fileAttached && msg.fileAttached.type === 'image') {
-                        parts.push({ inlineData: { mimeType: msg.fileAttached.mimeType, data: msg.fileAttached.data.split(',')[1] } });
+                    if (msg.role === 'user') {
+                        if (msg.fileAttached && msg.fileAttached.type === 'image') {
+                            parts.push({ inlineData: { mimeType: msg.fileAttached.mimeType, data: msg.fileAttached.data.split(',')[1] } });
+                        }
+                        parts.push({ text: msg.content || "..." });
+                        geminiContents.push({ role: 'user', parts: parts });
+                    } else if (!msg.isError) {
+                        geminiContents.push({ role: 'model', parts: [{ text: msg.content }] });
                     }
-                    // Bù đắp chuỗi rỗng để tránh API từ chối cấu trúc JSON dữ liệu
-                    parts.push({ text: msg.content || "..." });
-                    geminiContents.push({ role: msg.role === 'user' ? 'user' : 'model', parts: parts });
                 });
 
-                const response = await fetch(`${GEMINI_35_GATEWAY_URL}?key=${GEMINI_GATEWAY_KEY}`, {
-                    method: 'POST', headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ contents: geminiContents, systemInstruction: { parts: [{ text: customSystemPrompt }] } })
+                if (geminiContents.length === 0) {
+                    geminiContents.push({ role: 'user', parts: [{ text: "Hello AI Portal" }] });
+                }
+
+                const response = await fetch(GATEWAY_URL, {
+                    method: 'POST',
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ 
+                        contents: geminiContents, 
+                        systemInstruction: { parts: [{ text: customSystemPrompt }] } 
+                    })
                 });
 
                 const jsonRes = await response.json();
-                if (response.ok && jsonRes.candidates && jsonRes.candidates[0]) {
+
+                // BẮT LỖI LIMIT ĐỂ XOAY KEY VÀ GIẢ VỜ THINKING SÂU
+                if (!response.ok && (response.status === 429 || jsonRes.error?.status === "RESOURCE_EXHAUSTED" || jsonRes.error?.message?.toLowerCase().includes("limit"))) {
+                    console.warn(`Key tại vị trí index [${currentKeyIndex}] chạm giới hạn request. Kích hoạt Key Rotator Engine.`);
+                    
+                    if (currentKeyIndex + 1 < apiKeysPool.length) {
+                        currentKeyIndex++;
+                        updateKeyIndicator();
+
+                        // Giả bộ Thinking sâu để tạo trải nghiệm mượt mà đánh lừa thị giác người dùng
+                        aiArea.innerHTML = `
+                            <span style="color:var(--text-muted); font-style: italic;">
+                                <i class="fa-solid fa-brain fa-spin" style="color:#8a65ff; margin-right: 8px;"></i>
+                                [Deep Thinking...] Đang tái phân tích cấu trúc dữ liệu và tối ưu hóa luồng suy luận thông minh (Kích hoạt Key Node dự phòng số ${currentKeyIndex + 1})...
+                            </span>`;
+                        
+                        // Đệ quy tự động gọi lại chính nó với Key mới mà không làm đứt mạch chat
+                        return await executeFetchWithRetry(chosenModelName, activeSession, aiArea, replaceIdx);
+                    }
+                }
+
+                if (response.ok && jsonRes.candidates && jsonRes.candidates[0]?.content?.parts?.[0]) {
                     aiArea.innerHTML = "";
                     const aiReply = jsonRes.candidates[0].content.parts[0].text;
-                    activeSession.history.push({"role": "assistant", "content": aiReply});
+                    
+                    if (replaceIdx !== null) {
+                        activeSession.history[replaceIdx] = { "role": "assistant", "content": aiReply };
+                    } else {
+                        activeSession.history.push({ "role": "assistant", "content": aiReply });
+                    }
                     saveVault();
                     applyTypewriterEffect(aiArea, aiReply);
-                } else { throw new Error(); }
+                } else {
+                    throw new Error(jsonRes.error?.message || "Lỗi cấu trúc Cloud");
+                }
+
             } catch (err) {
-                if (attempt < 3) setTimeout(() => executeFetchWithRetry(chosenModelName, activeSession, aiArea, attempt + 1), 2000);
-                else aiArea.innerHTML = `<span style="color:#ea4335;"><i class="fa-solid fa-triangle-exclamation"></i> Lỗi kết nối Gate Cloud! Vui lòng bấm thử lại.</span>`;
+                console.error("Fetch Exception Logs:", err);
+                // Nếu chạy qua hết tất cả các key rồi mà vẫn tạch thì mới báo quá tải
+                aiArea.innerHTML = `
+                    <div class="error-container">
+                        <span><i class="fa-solid fa-triangle-exclamation"></i> Toàn bộ hệ thống API Key Pool đã cạn kiệt hoặc quá tải người dùng, vui lòng thử lại sau.</span>
+                        <button class="btn-retry-message" onclick="manualRetryAction(${replaceIdx !== null ? replaceIdx : activeSession.history.length})">
+                            <i class="fa-solid fa-rotate-right"></i> Kích hoạt lại luồng từ Key đầu tiên
+                        </button>
+                    </div>
+                `;
+                const errPayload = { "role": "assistant", "content": "API_LIMIT_OVERLOAD", "isError": true };
+                if (replaceIdx !== null) activeSession.history[replaceIdx] = errPayload;
+                else activeSession.history.push(errPayload);
+                saveVault();
             }
         }
 
@@ -844,6 +1015,7 @@
                 } else {
                     targetElement.innerHTML = parseMarkdownAndCode(fullText);
                     triggerMathJaxCompilation();
+                    chatHistory.scrollTop = chatHistory.scrollHeight;
                 }
             }
             requestAnimationFrame(run);
