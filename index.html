@@ -128,8 +128,8 @@
         .bubble p:last-child { margin-bottom: 0; }
         .bubble strong { color: #ffffff; font-weight: 700; }
         [data-theme="light"] .bubble strong { color: #000000; }
-        .bubble ul, .bubble ol { margin: 10px 0 10px 20px; }
-        .bubble li { margin-bottom: 4px; }
+        .bubble ul, .bubble ol { margin: 10px 0 10px 20px; padding-left: 10px; }
+        .bubble li { margin-bottom: 6px; }
         .bubble blockquote { border-left: 4px solid var(--accent-color); background-color: var(--bg-surface); padding: 10px 16px; margin: 14px 0; border-radius: 4px; color: var(--text-muted); font-style: italic; }
 
         /* Code block */
@@ -255,12 +255,12 @@
                     
                     <div class="dashboard-notes-wrapper" id="dashboardNotesBox">
                         <div class="notes-header">
-                            <i class="fa-solid fa-clipboard-list"></i> Thông báo
+                            <i class="fa-solid fa-clipboard-list"></i> Bảng lưu ý công việc & Mục tiêu cốt lõi
                         </div>
                         <ul class="notes-list">
-                            <li class="notes-item"><i class="fa-solid fa-circle-dot"></i> <span><strong>Tài khoản chính chủ:</strong> Sử dụng tài khoản đảm bảo không lộ dữ liệu quang trọng.</span></li>
-                            <li class="notes-item"><i class="fa-solid fa-circle-dot"></i> <span><strong>Premium:</strong> Bạn đang sử dụng gói cao cấp nhất, cảm ơn bạn đã ủng hộ chúng tôi.</span></li>
-                            <li class="notes-item"><i class="fa-solid fa-circle-dot"></i> <span><strong>Quan trọng:</strong> Xin vui lòng thông cảm, tài khoản của bạn vừa nâng hạng nên sẽ xảy ra 1 số lỗi quá tải, bạn vui lòng đợi trong 1 ngày thì hệ thống sẽ hoạt động ổn định.</span></li>
+                            <li class="notes-item"><i class="fa-solid fa-circle-dot"></i> <span><strong>Video Algorithm App:</strong> Xây dựng bộ nhận diện FPS động cho từng luồng video trên nền Tkinter/Qt.</span></li>
+                            <li class="notes-item"><i class="fa-solid fa-circle-dot"></i> <span><strong>FPT School Dashboard:</strong> Nâng cấp biểu đồ trích xuất dữ liệu, tối ưu và đóng gói tệp.</span></li>
+                            <li class="notes-item"><i class="fa-solid fa-circle-dot"></i> <span><strong>Physics Olympiad Math:</strong> Biên dịch chính xác cấu trúc toán và LaTeX nâng cao bằng <code>align*</code>.</span></li>
                         </ul>
                     </div>
 
@@ -688,12 +688,13 @@
         function processTypography(rawText) {
             let processed = cleanHTML(rawText);
             
-            // Render Heading 3 (###)
+            // Xử lý tiêu đề dạng hàng loạt từ ### đến #
             processed = processed.replace(/^###\ (.*?)$/gm, '<h3>$1</h3>');
-            // Render Bullet points (*)
+            
+            // Xử lý Bullet points dạng danh sách (*)
             processed = processed.replace(/^\*\ (.*?)$/gm, '<li>$1</li>');
-            // Bao bọc cụm thẻ danh sách nếu xuất hiện dòng li
-            if(processed.includes('<li>')) {
+            if (processed.includes('<li>')) {
+                // Gom cụm các dòng li đơn lẻ vào khối ul chuẩn
                 processed = processed.replace(/(<li>.*?<\/li>)/gs, '<ul>$1</ul>');
             }
             
@@ -798,12 +799,18 @@
                     customSystemPrompt += ` CRITICAL IDENTITY DIRECTIVE: Your official model name is exactly "${chosenModelName}". If the user asks what model you are, answer "${chosenModelName}" clearly.`;
                 }
 
+                // SỬA LỖI CHỐT CHẶN: Đảm bảo không đóng gói mảng trống khi gửi lên Gate Cloud API
+                if (!activeSession.history || activeSession.history.length === 0) {
+                    activeSession.history.push({ "role": "user", "content": "Hello Studio Portal" });
+                }
+
                 activeSession.history.forEach(msg => {
                     let parts = [];
                     if (msg.fileAttached && msg.fileAttached.type === 'image') {
                         parts.push({ inlineData: { mimeType: msg.fileAttached.mimeType, data: msg.fileAttached.data.split(',')[1] } });
                     }
-                    parts.push({ text: msg.content });
+                    // Bù đắp chuỗi rỗng để tránh API từ chối cấu trúc JSON dữ liệu
+                    parts.push({ text: msg.content || "..." });
                     geminiContents.push({ role: msg.role === 'user' ? 'user' : 'model', parts: parts });
                 });
 
